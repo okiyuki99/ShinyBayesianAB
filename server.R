@@ -60,6 +60,13 @@ shinyServer(function(input, output, session){
   })  
 
   # --------------------------
+  # Reset
+  observeEvent(input$test_method,{
+    values$data <- tibble()
+    values$AB <- NULL
+  })
+  
+  # --------------------------
   # Create Data for table and plot
   observeEvent(input$btn_go, {
     
@@ -85,8 +92,8 @@ shinyServer(function(input, output, session){
       
       work_data <- tibble(c_trial = c_trial, c_success = c_success, 
                           t_trial = t_trial, t_success = t_success, 
-                          fisher_test_pvalue = p_value,
-                          prior_alpha = alpha, prior_beta = beta,
+                          pvalue = p_value,
+                          alpha = alpha, beta = beta,
                           n_simulation = n_simulation,
                           win_prob = scales::percent(sum(AB$posteriors$Probability$A - AB$posteriors$Probability$B > 0) / n_simulation)
       )
@@ -116,9 +123,9 @@ shinyServer(function(input, output, session){
       
       work_data <- tibble(c_trial = c_trial, c_mean = c_mean, c_sd = c_sd,
                           t_trial = t_trial, t_mean = t_mean, t_sd = t_sd,
-                          t_test_pvalue = p_value,
-                          prior_mu = mu, prior_lambda = lambda,
-                          prior_alpha = alpha, prior_beta = beta,
+                          pvalue = p_value,
+                          mu = mu, lambda = lambda,
+                          alpha = alpha, beta = beta,
                           n_simulation = n_simulation,
                           win_prob = scales::percent(sum(AB$posteriors$Mu$A- AB$posteriors$Mu$B > 0) / n_simulation)
       )
@@ -166,11 +173,30 @@ shinyServer(function(input, output, session){
       return(NULL)
     }
     
-    values$data %>%
-      save_to(num_cols, ncol) %>%
-      knitr::kable(align = "r", escape = F) %>% 
-      kable_styling(c("striped", "bordered"), full_width = T) %>%
-      collapse_rows(columns = 1:num_cols, valign = "top")
+    if(input$test_method == "prop.test"){
+      values$data %>%
+        save_to(num_cols, ncol) %>%
+        mutate(pvalue = cell_spec(pvalue, color = "white"),
+               win_prob = cell_spec(win_prob, color = "white")) %>%
+        dplyr::rename_at(vars(contains('c_')), function(x){str_replace(x, "c_", "")}) %>%
+        dplyr::rename_at(vars(contains('t_')), function(x){str_replace(x, "t_", "")}) %>%
+        knitr::kable(align = "r", escape = F) %>% 
+        kable_styling(c("striped", "bordered"), full_width = T) %>%
+        add_header_above(c("Controll" = 2, "Treatment" = 2, "Fisher Test" = 1, "Prior" = 2, "Result" = 2)) %>%
+        collapse_rows(columns = 1:num_cols, valign = "top")
+    }else if(input$test_method == "t.test"){
+      values$data %>%
+        save_to(num_cols, ncol) %>%
+        mutate(pvalue = cell_spec(pvalue, color = "white"),
+               win_prob = cell_spec(win_prob, color = "white")) %>%
+        dplyr::rename_at(vars(contains('c_')), function(x){str_replace(x, "c_", "")}) %>%
+        dplyr::rename_at(vars(contains('t_')), function(x){str_replace(x, "t_", "")}) %>%
+        knitr::kable(align = "r", escape = F) %>% 
+        kable_styling(c("striped", "bordered"), full_width = T) %>%
+        add_header_above(c("Controll" = 3, "Treatment" = 3, "t test" = 1, "Prior" = 4, "Result" = 2)) %>%
+        collapse_rows(columns = 1:num_cols, valign = "top")
+    }
+    
   }
 
   # -----------------------------
@@ -180,7 +206,8 @@ shinyServer(function(input, output, session){
     if(input$test_method == "prop.test"){
       shiny::req(input$prior_alpha)
       shiny::req(input$prior_beta)
-      bayesAB::plotBeta(input$prior_alpha, input$prior_beta) + ggtitle(paste0('alpha =',input$prior_alpha, ' beta = ', input$prior_beta))
+      bayesAB::plotBeta(input$prior_alpha, input$prior_beta) + 
+        ggtitle(paste0('Prior distribution : alpha =',input$prior_alpha, ' beta = ', input$prior_beta))
     
     }else if(input$test_method == "t.test"){
       shiny::req(input$prior_mu)
@@ -188,7 +215,7 @@ shinyServer(function(input, output, session){
       shiny::req(input$prior_alpha)
       shiny::req(input$prior_beta)
       bayesAB::plotNormalInvGamma(input$prior_mu, input$prior_lambda, input$prior_alpha, input$prior_beta) + 
-        ggtitle(paste0('mu =',input$prior_mu, ' lambda = ', input$prior_lambda, ' alpha =',input$prior_alpha, ' beta = ', input$prior_beta))
+        ggtitle(paste0('Prior distribution : mu =',input$prior_mu, ' lambda = ', input$prior_lambda, ' alpha =',input$prior_alpha, ' beta = ', input$prior_beta))
     }
   })
   
@@ -198,9 +225,15 @@ shinyServer(function(input, output, session){
   output$plot_posterior <- renderPlot({
     shiny::req(values$AB)
     if(input$test_method == "prop.test"){
-      plot(values$AB)[[2]]$Probability
+      gg <- plot(values$AB)[[2]]$Probability 
     }else if(input$test_method == "t.test"){
-      plot(values$AB)[[2]]$Mu
+      gg <- plot(values$AB)[[2]]$Mu
+    }
+    if(!is.null(gg)){
+      gg +
+        scale_fill_discrete(name = "Treatment / Controll", labels = c("Treatment", "Controll")) +
+        theme(legend.position = "top") + 
+        ggtitle("Posterior distribution")  
     }
   })
 
@@ -210,10 +243,16 @@ shinyServer(function(input, output, session){
   output$plot_probability <- renderPlot({
     shiny::req(values$AB)
     if(input$test_method == "prop.test"){
-      plot(values$AB)[[3]]$Probability
+      gg <- plot(values$AB)[[3]]$Probability
     }else if(input$test_method == "t.test"){
-      plot(values$AB)[[3]]$Mu
+      gg <- plot(values$AB)[[3]]$Mu
     }
+    if(!is.null(gg)){
+      gg +
+        ggtitle("Histogram of (Treatment - Controll) / Controll Samples") +
+        labs(x = "(Treatment - Controll) / Controll")
+    }
+
   })
 
 })
