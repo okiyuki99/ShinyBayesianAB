@@ -88,7 +88,7 @@ shinyServer(function(input, output, session){
                       n_samples = n_simulation,
                       distribution = "bernoulli")
       
-      p_value <- fisher.test(matrix(c(c_trial, t_trial, c_success, t_success), nrow=2))$p.value
+      p_value <- fisher.test(matrix(c(c_trial - c_success, t_trial - t_success, c_success, t_success), nrow=2))$p.value
       
       work_data <- tibble(c_trial = c_trial, c_success = c_success, 
                           t_trial = t_trial, t_success = t_success, 
