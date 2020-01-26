@@ -207,6 +207,7 @@ shinyServer(function(input, output, session){
       shiny::req(input$prior_alpha)
       shiny::req(input$prior_beta)
       bayesAB::plotBeta(input$prior_alpha, input$prior_beta) + 
+        #scale_colour_manual(values = tableau_color_pal(palette = "Tableau 10")(6)[4]) +
         ggtitle(paste0('Prior distribution : alpha =',input$prior_alpha, ' beta = ', input$prior_beta))
     
     }else if(input$test_method == "t.test"){
@@ -231,7 +232,7 @@ shinyServer(function(input, output, session){
     }
     if(!is.null(gg)){
       gg +
-        scale_fill_discrete(name = "Treatment / Controll", labels = c("Treatment", "Controll")) +
+        scale_fill_manual(name = "Treatment / Controll", labels = c("Treatment", "Controll"),  values = tableau_color_pal(palette = "Tableau 10")(2)) +
         theme(legend.position = "top") + 
         ggtitle("Posterior distribution")  
     }
@@ -249,6 +250,7 @@ shinyServer(function(input, output, session){
     }
     if(!is.null(gg)){
       gg +
+        scale_fill_manual(values = tableau_color_pal(palette = "Tableau 10")(6)[5:6]) +
         ggtitle("Histogram of (Treatment - Controll) / Controll Samples") +
         labs(x = "(Treatment - Controll) / Controll")
     }

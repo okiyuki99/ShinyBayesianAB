@@ -5,6 +5,7 @@ library(knitr)
 
 library(kableExtra)
 library(plotly)
+library(ggthemes)
 library(bayesAB)
 
 library(tippy)
