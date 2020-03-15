@@ -16,14 +16,14 @@ shinyServer(function(input, output, session){
   output$ui_controll <- renderUI({
     if(input$test_method == "prop.test"){
       fluidRow(
-        column(3, numericInput('controll_trial', "# of trials", 250, min = 0, max = Inf, step = 1)),
-        column(3, numericInput('controll_success', "# of success", 50, min = 0, max = Inf, step = 1))
+        column(3, numericInput('control_trial', "# of trials", 250, min = 0, max = Inf, step = 1)),
+        column(3, numericInput('control_success', "# of success", 50, min = 0, max = Inf, step = 1))
       )
     }else if(input$test_method == "t.test"){
       fluidRow(
-        column(3, numericInput('controll_trial', "# of trials", 250, min = 0, max = Inf, step = 1)),
-        column(3, numericInput('controll_mean', "mean", 3, min = 0, max = Inf, step = 1)),
-        column(3, numericInput('controll_sd', "sd", 1, min = 0, max = Inf, step = 1))
+        column(3, numericInput('control_trial', "# of trials", 250, min = 0, max = Inf, step = 1)),
+        column(3, numericInput('control_mean', "mean", 3, min = 0, max = Inf, step = 1)),
+        column(3, numericInput('control_sd', "sd", 1, min = 0, max = Inf, step = 1))
       )
     }
   })
@@ -70,10 +70,12 @@ shinyServer(function(input, output, session){
   # Create Data for table and plot
   observeEvent(input$btn_go, {
     
+    set.seed(input$test_seed)
+    
     # from input
     if(input$test_method == "prop.test"){
-      c_trial <- input$controll_trial
-      c_success <- input$controll_success
+      c_trial <- input$control_trial
+      c_success <- input$control_success
       t_trial <- input$treatment_trial
       t_success <- input$treatment_success
       alpha <- input$prior_alpha
@@ -99,9 +101,9 @@ shinyServer(function(input, output, session){
       )
       
     }else if(input$test_method == "t.test"){
-      c_trial <- input$controll_trial
-      c_mean <- input$controll_mean
-      c_sd <- input$controll_sd
+      c_trial <- input$control_trial
+      c_mean <- input$control_mean
+      c_sd <- input$control_sd
       t_trial <- input$treatment_trial
       t_mean <- input$treatment_mean
       t_sd <- input$treatment_sd
@@ -176,21 +178,17 @@ shinyServer(function(input, output, session){
     if(input$test_method == "prop.test"){
       values$data %>%
         save_to(num_cols, ncol) %>%
-        mutate(pvalue = cell_spec(pvalue, color = "white"),
-               win_prob = cell_spec(win_prob, color = "white")) %>%
-        dplyr::rename_at(vars(contains('c_')), function(x){str_replace(x, "c_", "")}) %>%
-        dplyr::rename_at(vars(contains('t_')), function(x){str_replace(x, "t_", "")}) %>%
+        mutate(pvalue = cell_spec(pvalue, color = "blue"),
+               win_prob = cell_spec(win_prob, color = "blue")) %>%
         knitr::kable(align = "r", escape = F) %>% 
         kable_styling(c("striped", "bordered"), full_width = T) %>%
-        add_header_above(c("Controll" = 2, "Treatment" = 2, "Fisher Test" = 1, "Prior" = 2, "Result" = 2)) %>%
+        add_header_above(c("Control" = 2, "Treatment" = 2, "Fisher Test" = 1, "Prior" = 2, "Result" = 2)) %>%
         collapse_rows(columns = 1:num_cols, valign = "top")
     }else if(input$test_method == "t.test"){
       values$data %>%
         save_to(num_cols, ncol) %>%
-        mutate(pvalue = cell_spec(pvalue, color = "white"),
-               win_prob = cell_spec(win_prob, color = "white")) %>%
-        dplyr::rename_at(vars(contains('c_')), function(x){str_replace(x, "c_", "")}) %>%
-        dplyr::rename_at(vars(contains('t_')), function(x){str_replace(x, "t_", "")}) %>%
+        mutate(pvalue = cell_spec(pvalue, color = "blue"),
+               win_prob = cell_spec(win_prob, color = "blue")) %>%
         knitr::kable(align = "r", escape = F) %>% 
         kable_styling(c("striped", "bordered"), full_width = T) %>%
         add_header_above(c("Controll" = 3, "Treatment" = 3, "t test" = 1, "Prior" = 4, "Result" = 2)) %>%
@@ -231,10 +229,12 @@ shinyServer(function(input, output, session){
       gg <- plot(values$AB)[[2]]$Mu
     }
     if(!is.null(gg)){
-      gg +
+      suppressMessages(
+        gg +
         scale_fill_manual(name = "Treatment / Controll", labels = c("Treatment", "Controll"),  values = tableau_color_pal(palette = "Tableau 10")(2)) +
         theme(legend.position = "top") + 
-        ggtitle("Posterior distribution")  
+        ggtitle("Posterior distribution")
+      )
     }
   })
 
@@ -249,10 +249,12 @@ shinyServer(function(input, output, session){
       gg <- plot(values$AB)[[3]]$Mu
     }
     if(!is.null(gg)){
-      gg +
-        scale_fill_manual(values = tableau_color_pal(palette = "Tableau 10")(6)[5:6]) +
-        ggtitle("Histogram of (Treatment - Controll) / Controll Samples") +
-        labs(x = "(Treatment - Controll) / Controll")
+      suppressMessages(
+        gg +
+        scale_fill_manual(values = c("#CDCC5D", "#A2A2A2")) +
+        ggtitle("Histogram of (Treatment - Control) / Control Samples") +
+        labs(x = "(Treatment - Control) / Control")
+      )
     }
 
   })

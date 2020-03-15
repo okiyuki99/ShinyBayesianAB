@@ -11,7 +11,7 @@ shinyUI(
       )
     ),
     dashboardBody(
-      shinyDashboardThemes(theme = "grey_light"),
+      theme_grey_light,
       tabItems(
         tabItem(tabName = "menu_top",
           fluidRow(
@@ -29,7 +29,8 @@ shinyUI(
               ),
               uiOutput("ui_treatment"),
               fluidRow(
-                column(12, numericInput('n_simulation', "Simulations", 10000, min = 100, max = 10000000, step = 100)),
+                column(2, numericInput('test_seed', "Set seed", 1)),
+                column(10, numericInput('n_simulation', "Simulations", 10000, min = 100, max = 10000000, step = 100)),
                 column(12, actionButton("btn_go", "Run"))
               )
             ),
@@ -49,8 +50,12 @@ shinyUI(
             box(title = p(icon("history"),"History"), width = 12, solidHeader = F, status = "success", 
               fluidRow(
                 column(12, tableOutput("kable_proportion")),
-                column(1, actionButton("btn_remove", "Remove Record")),
-                column(1, uiOutput("ui_dlbtn"))
+                column(12,
+                  div(
+                    div(style="display:inline-block", actionButton("btn_remove", "Remove Record")),
+                    div(style="display:inline-block", uiOutput("ui_dlbtn"))
+                  )
+                )
               )
             )
           )
