@@ -14,12 +14,12 @@ shinyServer(function(input, output, session){
   
   
   output$ui_controll <- renderUI({
-    if(input$test_method == "prop.test"){
+    if(input$test_method == "bernoulli"){
       fluidRow(
         column(3, numericInput('control_trial', "# of trials", 250, min = 0, max = Inf, step = 1)),
         column(3, numericInput('control_success', "# of success", 50, min = 0, max = Inf, step = 1))
       )
-    }else if(input$test_method == "t.test"){
+    }else if(input$test_method == "normal"){
       fluidRow(
         column(3, numericInput('control_trial', "# of trials", 250, min = 0, max = Inf, step = 1)),
         column(3, numericInput('control_mean', "mean", 3, min = 0, max = Inf, step = 1)),
@@ -29,12 +29,12 @@ shinyServer(function(input, output, session){
   })
   
   output$ui_treatment <- renderUI({
-    if(input$test_method == "prop.test"){
+    if(input$test_method == "bernoulli"){
       fluidRow(
         column(3, numericInput('treatment_trial', "# of trials", 250, min = 0, max = Inf, step = 1)),
         column(3, numericInput('treatment_success', "# of success", 60, min = 0, max = Inf, step = 1))
       )
-    }else if(input$test_method == "t.test"){
+    }else if(input$test_method == "normal"){
       fluidRow(
         column(3, numericInput('treatment_trial', "# of trials", 250, min = 0, max = Inf, step = 1)),
         column(3, numericInput('treatment_mean', "mean", 3.3, min = 0, max = Inf, step = 1)),
@@ -44,12 +44,12 @@ shinyServer(function(input, output, session){
   })
 
   output$ui_prior <- renderUI({
-    if(input$test_method == "prop.test"){
+    if(input$test_method == "bernoulli"){
       fluidRow(
         column(6, numericInput('prior_alpha', "alpha", 20, step = 1)),
         column(6, numericInput('prior_beta', "beta", 50, step = 1))
       )
-    }else if(input$test_method == "t.test"){
+    }else if(input$test_method == "normal"){
       fluidRow(
         column(3, numericInput('prior_mu', "mu", 3, step = 1)),
         column(3, numericInput('prior_lambda', "lambda", 1, step = 1)),
@@ -73,7 +73,7 @@ shinyServer(function(input, output, session){
     set.seed(input$test_seed)
     
     # from input
-    if(input$test_method == "prop.test"){
+    if(input$test_method == "bernoulli"){
       c_trial <- input$control_trial
       c_success <- input$control_success
       t_trial <- input$treatment_trial
@@ -100,7 +100,7 @@ shinyServer(function(input, output, session){
                           win_prob = scales::percent(sum(AB$posteriors$Probability$A - AB$posteriors$Probability$B > 0) / n_simulation)
       )
       
-    }else if(input$test_method == "t.test"){
+    }else if(input$test_method == "normal"){
       c_trial <- input$control_trial
       c_mean <- input$control_mean
       c_sd <- input$control_sd
@@ -175,7 +175,7 @@ shinyServer(function(input, output, session){
       return(NULL)
     }
     
-    if(input$test_method == "prop.test"){
+    if(input$test_method == "bernoulli"){
       values$data %>%
         save_to(num_cols, ncol) %>%
         mutate(pvalue = cell_spec(pvalue, color = "blue"),
@@ -184,7 +184,7 @@ shinyServer(function(input, output, session){
         kable_styling(c("striped", "bordered"), full_width = T) %>%
         add_header_above(c("Control" = 2, "Treatment" = 2, "Fisher Test" = 1, "Prior" = 2, "Result" = 2)) %>%
         collapse_rows(columns = 1:num_cols, valign = "top")
-    }else if(input$test_method == "t.test"){
+    }else if(input$test_method == "normal"){
       values$data %>%
         save_to(num_cols, ncol) %>%
         mutate(pvalue = cell_spec(pvalue, color = "blue"),
@@ -201,14 +201,14 @@ shinyServer(function(input, output, session){
   # Output : prior distribution
   # -----------------------------
   output$prior_distribution <- renderPlot({
-    if(input$test_method == "prop.test"){
+    if(input$test_method == "bernoulli"){
       shiny::req(input$prior_alpha)
       shiny::req(input$prior_beta)
       bayesAB::plotBeta(input$prior_alpha, input$prior_beta) + 
         #scale_colour_manual(values = tableau_color_pal(palette = "Tableau 10")(6)[4]) +
         ggtitle(paste0('Prior distribution : alpha =',input$prior_alpha, ' beta = ', input$prior_beta))
     
-    }else if(input$test_method == "t.test"){
+    }else if(input$test_method == "normal"){
       shiny::req(input$prior_mu)
       shiny::req(input$prior_lambda)
       shiny::req(input$prior_alpha)
@@ -223,9 +223,9 @@ shinyServer(function(input, output, session){
   # -----------------------------
   output$plot_posterior <- renderPlot({
     shiny::req(values$AB)
-    if(input$test_method == "prop.test"){
+    if(input$test_method == "bernoulli"){
       gg <- plot(values$AB)[[2]]$Probability 
-    }else if(input$test_method == "t.test"){
+    }else if(input$test_method == "normal"){
       gg <- plot(values$AB)[[2]]$Mu
     }
     if(!is.null(gg)){
@@ -243,9 +243,9 @@ shinyServer(function(input, output, session){
   # -----------------------------
   output$plot_probability <- renderPlot({
     shiny::req(values$AB)
-    if(input$test_method == "prop.test"){
+    if(input$test_method == "bernoulli"){
       gg <- plot(values$AB)[[3]]$Probability
-    }else if(input$test_method == "t.test"){
+    }else if(input$test_method == "normal"){
       gg <- plot(values$AB)[[3]]$Mu
     }
     if(!is.null(gg)){

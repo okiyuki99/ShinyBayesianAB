@@ -1,5 +1,5 @@
 shinyUI(
-  dashboardPage(title = "ShinyABTesting",
+  dashboardPage(title = "Shiny BayesianAB",
     dashboardHeader(title = logo_grey_light, titleWidth = 250),
     dashboardSidebar(
       collapsed = T,
@@ -17,7 +17,7 @@ shinyUI(
           fluidRow(
             box(title = p(icon("cog"), "Experiment"), width = 6, solidHeader = F, status = "info", 
               fluidRow(
-                column(12, radioButtons('test_method', "Choose test", choices  = c("prop.test","t.test"), selected = "prop.test", inline = T))
+                column(12, radioButtons('test_method', "Choose distribution", choices  = c("bernoulli","normal"), selected = "bernoulli", inline = T))
               ),
               fluidRow(
                 column(12, HTML("<hr>")),
@@ -30,7 +30,7 @@ shinyUI(
               uiOutput("ui_treatment"),
               fluidRow(
                 column(2, numericInput('test_seed', "Set seed", 1)),
-                column(10, numericInput('n_simulation', "Simulations", 10000, min = 100, max = 10000000, step = 100)),
+                column(4, numericInput('n_simulation', "Simulations", 10000, min = 100, max = 10000000, step = 100)),
                 column(12, actionButton("btn_go", "Run"))
               )
             ),

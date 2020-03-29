@@ -23,7 +23,7 @@ shinyDashboardLogoDIY <- function(boldText, mainText, textSize = 15, badgeText, 
 }
 
 logo_grey_light <- shinyDashboardLogoDIY(
-  boldText = "ShinyABTesting"
+  boldText = "Shiny BayesianAB"
   ,mainText = ""
   ,textSize = 16
   ,badgeText = "1.0.0"
