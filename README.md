@@ -1,7 +1,7 @@
-# ShinyABTesting
-A shiny apps for Bayesian and Classical Hypothesis AB Test 
+# ShinyBayesianAB
+A shiny apps for Bayesian AB Test 
 
-https://okiyuki.shinyapps.io/ShinyABTesting/
+https://okiyuki.shinyapps.io/ShinyBayesianAB/
 
 ## Preview
 
