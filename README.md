@@ -1,5 +1,6 @@
 # ShinyBayesianAB
-A shiny apps for Bayesian AB Test 
+A shiny app for Bayesian A/B Testing.
+The implementation is based on bayesAB package built and maintained by Frank Portman.
 
 https://okiyuki.shinyapps.io/ShinyBayesianAB/
 
